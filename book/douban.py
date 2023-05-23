@@ -125,7 +125,6 @@ class DoubanBookHtmlParser:
             url="",
             source=MetaSourceInfo("", "", "")
         )
-        print(url)
         html = etree.HTML(content)
         title_element = html.xpath("//span[@property='v:itemreviewed']")
         book.title = self.__get_text(title_element)
@@ -139,28 +138,28 @@ class DoubanBookHtmlParser:
         img_element = html.xpath("//a[@class='nbg']")
         if len(img_element):
             cover = img_element[0].attrib['href']
-        if not cover or cover.endswith('update_image'):
-            book.cover = ''
-        else:
-            book.cover = cover
+            if not cover or cover.endswith('update_image'):
+                book.cover = ''
+            else:
+                book.cover = cover
         rating_element = html.xpath("//strong[@property='v:average']")
         book.rating = self.__get_rating(rating_element)
         elements = html.xpath("//span[@class='pl']")
         for element in elements:
             text = self.__get_text(element)
-        if text.startswith("作者") or text.startswith("译者"):
-            book.authors.extend([self.__get_text(author_element) for author_element in
-                                 filter(self.author_filter, element.findall("..//a"))])
-        elif text.startswith("出版社"):
-            book.publisher = self.__get_tail(element)
-        elif text.startswith("副标题"):
-            book.title = book.title + ':' + self.__get_tail(element)
-        elif text.startswith("出版年"):
-            book.publishedDate = self.__get_publish_date(self.get_tail(element))
-        elif text.startswith("丛书"):
-            book.series = self.__get_text(element.getnext())
-        elif text.startswith("ISBN"):
-            book.identifiers["isbn"] = self.__get_tail(element)
+            if text.startswith("作者") or text.startswith("译者"):
+                book.authors.extend([self.__get_text(author_element) for author_element in
+                                     filter(self.author_filter, element.findall("..//a"))])
+            elif text.startswith("出版社"):
+                book.publisher = self.__get_tail(element)
+            elif text.startswith("副标题"):
+                book.title = book.title + ':' + self.__get_tail(element)
+            elif text.startswith("出版年"):
+                book.publishedDate = self.__get_publish_date(self.get_tail(element))
+            elif text.startswith("丛书"):
+                book.series = self.__get_text(element.getnext())
+            elif text.startswith("ISBN"):
+                book.identifiers["isbn"] = self.__get_tail(element)
         summary_element = html.xpath("//div[@id='link-report']//div[@class='intro']")
         if len(summary_element):
             book.description = etree.tostring(summary_element[-1], encoding="utf8").decode("utf8").strip()
