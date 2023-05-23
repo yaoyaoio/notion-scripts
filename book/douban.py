@@ -2,6 +2,7 @@ import random
 import re
 import time
 import requests
+from datetime import datetime
 from typing import List, Optional, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.parse import urlparse, unquote
@@ -126,6 +127,8 @@ class DoubanBookHtmlParser:
             source=MetaSourceInfo("", "", "")
         )
         html = etree.HTML(content)
+        if html is None:
+            return book
         title_element = html.xpath("//span[@property='v:itemreviewed']")
         book.title = self.__get_text(title_element)
         share_element = html.xpath("//a[@data-url]")
@@ -155,7 +158,7 @@ class DoubanBookHtmlParser:
             elif text.startswith("副标题"):
                 book.title = book.title + ':' + self.__get_tail(element)
             elif text.startswith("出版年"):
-                book.publishedDate = self.__get_publish_date(self.get_tail(element))
+                book.publishedDate = self.__get_publish_date(self.__get_tail(element))
             elif text.startswith("丛书"):
                 book.series = self.__get_text(element.getnext())
             elif text.startswith("ISBN"):
@@ -171,7 +174,7 @@ class DoubanBookHtmlParser:
         return book
 
     def __get_tags(self, book_content) -> List[Any]:
-        tag_match = self.tag_pattern.findall(book_content)
+        tag_match = self.tag_pattern.findall(book_content.decode('utf-8'))
         if len(tag_match):
             return [tag.replace('7:', '') for tag in
                     filter(lambda tag: tag and tag.startswith('7:'), tag_match[0].split('|'))]
@@ -179,9 +182,13 @@ class DoubanBookHtmlParser:
 
     def __get_publish_date(self, date_str):
         if date_str:
+            # 2022-7
             date_match = self.date_pattern.fullmatch(date_str)
             if date_match:
-                date_str = "{}-{}-01".format(date_match.group(1), date_match.group(2))
+                date_str = date_match.group(1) + '-' + date_match.group(2)
+                date_time = datetime.strptime(date_str, "%Y-%m")
+                iso8601_date = date_time.date().isoformat()
+                return iso8601_date
         return date_str
 
     def __get_rating(self, rating_element) -> float:
