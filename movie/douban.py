@@ -136,13 +136,10 @@ class DoubanMovieHtmlParser:
         id_match = self.id_pattern.match(url)
         if id_match:
             movie.movie_id = id_match.group(1)
-        img_element = html.xpath("//a[@class='nbg']")
+        img_element = html.xpath("//img[@rel='v:image']")
         if len(img_element):
-            cover = img_element[0].attrib['href']
-            if not cover or cover.endswith('update_image'):
-                movie.cover = ''
-            else:
-                movie.cover = cover
+            cover = img_element[0].attrib['src']
+            movie.cover = cover
         elements = html.xpath("//span[@class='pl']")
         for element in elements:
             text = self.__get_text(element)

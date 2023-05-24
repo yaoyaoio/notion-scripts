@@ -84,8 +84,7 @@ def gen_movie_properties(meta: MovieMetaRecord) -> Dict[Any, Any]:
             },
 
             "国家": {
-                "multi_select": [{"name": country} for
-                                 country in meta.countries]
+                "multi_select": [{"name": meta.countries}]
             },
             "标签": {
                 "multi_select": [
@@ -109,7 +108,6 @@ def sync_movie_info(movies: List[MovieEmptyPage], provider: DoubanaMovieProvider
         try:
             movie_mata_record = provider.search_one(query=movie.imdb)
             properties = gen_movie_properties(movie_mata_record)
-            print(properties)
             nc.pages.update(page_id=movie.page_id, **properties)
             print(f"Synced {movie.movie_name}")
         except Exception as e:
